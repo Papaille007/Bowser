@@ -94,7 +94,7 @@ def root() -> str:
 
 @app.get("/name")
 def name() -> str:
-    return "Default player name"
+    return "Koopa Dominion"
 
 
 @app.get("/start_game")
