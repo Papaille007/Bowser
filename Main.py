@@ -14,7 +14,7 @@ from fastapi import Depends, FastAPI, Header, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
-from Strategy import choose_discard
+from Strategy import choose_discard, choose_trash
 
 app = FastAPI()
 
@@ -153,7 +153,9 @@ async def trash_card_from_hand(
     game_id: GameIdDependency,
     decision_input: Hand,
 ) -> DopynionResponseCardName:
-    return DopynionResponseCardName(game_id=game_id, decision=decision_input.hand[0])
+    card = choose_trash(decision_input.hand)
+
+    return DopynionResponseCardName(game_id=game_id, decision=card)
 
 
 @app.post("/confirm_discard_deck")
