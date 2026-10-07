@@ -4,22 +4,28 @@ from dopynion.data_model import CardName
 def choose_discard(hand: list[CardName]) -> CardName:
     """Choisit une carte à défausser."""
 
-    if CardName.Estate in hand:
-        return CardName.Estate
+    # Priorité : défausser un Estate
+    if CardName.ESTATE in hand:
+        return CardName.ESTATE
 
-    if CardName.Copper in hand:
-        return CardName.Copper
+    # Sinon : défausser un Copper
+    if CardName.COPPER in hand:
+        return CardName.COPPER
 
+    # Sinon : première carte disponible
     return hand[0]
 
 
 def choose_trash(hand: list[CardName]) -> CardName:
     """Choisit une carte à supprimer du deck."""
 
-    if CardName.Estate in hand:
-        return CardName.Estate
+    # Priorité : supprimer un Estate
+    if CardName.ESTATE in hand:
+        return CardName.ESTATE
 
-    if CardName.Copper in hand:
-        return CardName.Copper
+    # Sinon : supprimer un Copper
+    if CardName.COPPER in hand:
+        return CardName.COPPER
 
+    # Sinon : première carte disponible
     return hand[0]
