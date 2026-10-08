@@ -1,20 +1,14 @@
 from dopynion.data_model import CardName
 
 
-def calculate_money(hand: list[CardName]) -> int:
-    """Calcule l'argent disponible dans une main."""
+def calculate_money(hand) -> int:
+    """Calcule l'argent disponible dans la main."""
 
     money = 0
 
-    for card in hand:
-        if card == CardName.COPPER:
-            money += 1
-
-        elif card == CardName.SILVER:
-            money += 2
-
-        elif card == CardName.GOLD:
-            money += 3
+    money += hand.quantities.get(CardName.COPPER, 0) * 1
+    money += hand.quantities.get(CardName.SILVER, 0) * 2
+    money += hand.quantities.get(CardName.GOLD, 0) * 3
 
     return money
 
