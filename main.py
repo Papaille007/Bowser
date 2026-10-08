@@ -115,7 +115,8 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
     # Notre royaume est identifié par le game_id.
     print(game)
     # Le premier joueur correspond à notre royaume.
-    player = game.players[0]
+    player = next(player for player in game.players if "Koopa Dominion" in player.name)
+
     print(player)
     print(player.hand)
     # Sécurité : si aucune main n'est disponible,
