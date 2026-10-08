@@ -142,7 +142,7 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
 
     print("ACTIONS :", actions_remaining, flush=True)
 
-    if actions_remaining > 0 and action != "NO_ACTION":
+    if actions_remaining > 0:
         action = choose_action(player.hand)
 
         if action.startswith("ACTION"):
