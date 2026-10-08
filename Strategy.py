@@ -91,4 +91,4 @@ def choose_action(hand: Cards) -> str:
     if hand.quantities.get(CardName.LABORATORY, 0) > 0:
         return f"ACTION {CardName.LABORATORY.value}"
 
-    return "NO_ACTION"
+    return "END_TURN"
