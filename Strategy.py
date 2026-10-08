@@ -16,19 +16,55 @@ def calculate_money(hand) -> int:
 def choose_buy(money: int, stock) -> str:
     """Choisit quoi acheter selon l'argent et le stock disponible."""
 
+    # Vérification de la disponibilité des cartes
     province_available = stock.quantities.get(CardName.PROVINCE, 0) > 0
+    duchy_available = stock.quantities.get(CardName.DUCHY, 0) > 0
+    estate_available = stock.quantities.get(CardName.ESTATE, 0) > 0
+
     gold_available = stock.quantities.get(CardName.GOLD, 0) > 0
     silver_available = stock.quantities.get(CardName.SILVER, 0) > 0
     copper_available = stock.quantities.get(CardName.COPPER, 0) > 0
 
+    festival_available = stock.quantities.get(CardName.FESTIVAL, 0) > 0
+    laboratory_available = stock.quantities.get(CardName.LABORATORY, 0) > 0
+    market_available = stock.quantities.get(CardName.MARKET, 0) > 0
+    smithy_available = stock.quantities.get(CardName.SMITHY, 0) > 0
+    village_available = stock.quantities.get(CardName.VILLAGE, 0) > 0
+    woodcutter_available = stock.quantities.get(CardName.WOODCUTTER, 0) > 0
+
+    # Stratégie d'achat
     if money >= 8 and province_available:
         return f"BUY {CardName.PROVINCE.value}"
 
     if money >= 6 and gold_available:
         return f"BUY {CardName.GOLD.value}"
 
+    if money >= 5 and duchy_available:
+        return f"BUY {CardName.DUCHY.value}"
+
+    if money >= 5 and festival_available:
+        return f"BUY {CardName.FESTIVAL.value}"
+
+    if money >= 5 and laboratory_available:
+        return f"BUY {CardName.LABORATORY.value}"
+
+    if money >= 5 and market_available:
+        return f"BUY {CardName.MARKET.value}"
+
+    if money >= 4 and smithy_available:
+        return f"BUY {CardName.SMITHY.value}"
+
     if money >= 3 and silver_available:
         return f"BUY {CardName.SILVER.value}"
+
+    if money >= 3 and village_available:
+        return f"BUY {CardName.VILLAGE.value}"
+
+    if money >= 3 and woodcutter_available:
+        return f"BUY {CardName.WOODCUTTER.value}"
+
+    if money >= 2 and estate_available:
+        return f"BUY {CardName.ESTATE.value}"
 
     if copper_available:
         return f"BUY {CardName.COPPER.value}"
