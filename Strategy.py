@@ -1,4 +1,4 @@
-from dopynion.data_model import CardName
+from dopynion.data_model import CardName, Cards
 
 
 def calculate_money(hand) -> int:
