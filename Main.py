@@ -14,7 +14,7 @@ from fastapi import Depends, FastAPI, Header, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
-from Strategy import choose_discard, choose_trash
+from Strategy import choose_discard, choose_trash, calculate_money, choose_buy
 
 app = FastAPI()
 
@@ -110,8 +110,29 @@ def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
 
 
 @app.post("/play")
-def play(_game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
-    return DopynionResponseStr(game_id=game_id, decision="END_TURN")
+def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
+    # Notre royaume est identifié par le game_id.
+    # Le premier joueur correspond à notre royaume.
+    player = game.players[0]
+
+    # Sécurité : si aucune main n'est disponible,
+    # on termine le tour.
+    if player.hand is None:
+        return DopynionResponseStr(
+            game_id=game_id,
+            decision="END_TURN",
+        )
+
+    # Calcul de l'argent disponible dans la main.
+    money = calculate_money(player.hand)
+
+    # Stratégie Big Money.
+    decision = choose_buy(money, game.stock)
+
+    return DopynionResponseStr(
+        game_id=game_id,
+        decision=decision,
+    )
 
 
 @app.get("/end_game")
