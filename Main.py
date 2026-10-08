@@ -110,118 +110,32 @@ def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
     return DopynionResponseStr(game_id=game_id, decision="OK")
 
 
-# @app.post("/play")
-# def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
-#     # Notre royaume est identifié par le game_id.
-#     # Le premier joueur correspond à notre royaume.
-#     player = game.players[0]
-
-#     # Sécurité : si aucune main n'est disponible,
-#     # on termine le tour.
-#     if player.hand is None:
-#         return DopynionResponseStr(
-#             game_id=game_id,
-#             decision="END_TURN",
-#         )
-
-#     # Calcul de l'argent disponible dans la main.
-#     money = calculate_money(player.hand)
-
-#     # Stratégie Big Money.
-#     decision = choose_buy(money, game.stock)
-
-
-#     return DopynionResponseStr(
-#         game_id=game_id,
-#         decision=decision,
-#     )
 @app.post("/play")
-async def play(request: Request, game_id: GameIdDependency) -> DopynionResponseStr:
+def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
+    # Notre royaume est identifié par le game_id.
+    print(game)
+    # Le premier joueur correspond à notre royaume.
+    player = game.players[0]
+    print(player)
+    print(player.hand)
+    # Sécurité : si aucune main n'est disponible,
+    # on termine le tour.
+    if player.hand is None:
+        return DopynionResponseStr(
+            game_id=game_id,
+            decision="END_TURN",
+        )
 
-    # Récupération du JSON réellement envoyé par l'arbitre
-    data = await request.json()
+    # Calcul de l'argent disponible dans la main.
+    money = calculate_money(player.hand)
+    print(money)
+    # Stratégie Big Money.
+    decision = choose_buy(money, game.stock)
+    print(decision)
 
-    print("\n" + "=" * 60, flush=True)
-    print("              NOUVEAU /play", flush=True)
-    print("=" * 60, flush=True)
-
-    # Identification de la partie
-    print(f"GAME ID : {game_id}", flush=True)
-
-    # Affichage du JSON complet reçu
-    print("\n--- JSON REÇU DE L'ARBITRE ---", flush=True)
-    print(json.dumps(data, indent=4, ensure_ascii=False), flush=True)
-
-    # --------------------------------------------------
-    # Informations générales
-    # --------------------------------------------------
-
-    print("\n--- SITUATION DE LA PARTIE ---", flush=True)
-
-    if "finished" in data:
-        print(f"Partie terminée : {data['finished']}", flush=True)
-
-    # --------------------------------------------------
-    # Joueurs
-    # --------------------------------------------------
-
-    players = data.get("players", [])
-
-    print(f"\nNombre de joueurs : {len(players)}", flush=True)
-
-    for i, player in enumerate(players):
-        print(f"\nJoueur {i + 1}", flush=True)
-        print(f"  Nom   : {player.get('name')}", flush=True)
-        print(f"  Score : {player.get('score')}", flush=True)
-
-        hand = player.get("hand")
-
-        print(f"  Main  : {hand}", flush=True)
-
-        # Si la main est une liste
-        if isinstance(hand, list):
-            money = 0
-
-            for card in hand:
-                if card.lower() == "copper":
-                    money += 1
-                elif card.lower() == "silver":
-                    money += 2
-                elif card.lower() == "gold":
-                    money += 3
-
-            print(f"  Argent disponible : {money}", flush=True)
-
-        # Si la main est sous forme {quantities: {...}}
-        elif isinstance(hand, dict):
-            quantities = hand.get("quantities", {})
-
-            copper = quantities.get("copper", quantities.get("Copper", 0))
-            silver = quantities.get("silver", quantities.get("Silver", 0))
-            gold = quantities.get("gold", quantities.get("Gold", 0))
-
-            money = copper * 1 + silver * 2 + gold * 3
-
-            print(f"  Copper : {copper}", flush=True)
-            print(f"  Silver : {silver}", flush=True)
-            print(f"  Gold   : {gold}", flush=True)
-            print(f"  Argent disponible : {money}", flush=True)
-
-    # --------------------------------------------------
-    # Stock
-    # --------------------------------------------------
-
-    stock = data.get("stock")
-
-    print("\n--- STOCK ---", flush=True)
-    print(json.dumps(stock, indent=4, ensure_ascii=False), flush=True)
-
-    print("=" * 60 + "\n", flush=True)
-
-    # Pour l'instant on termine simplement le tour
     return DopynionResponseStr(
         game_id=game_id,
-        decision="END_TURN",
+        decision=decision,
     )
 
 
