@@ -26,6 +26,8 @@ from Strategy import (
 )
 
 app = FastAPI()
+actions_remaining_by_game = {}
+buys_remaining_by_game = {}
 
 #####################################################
 # Data model for responses
@@ -115,7 +117,19 @@ def start_game(game_id: GameIdDependency) -> DopynionResponseStr:
 
 @app.get("/start_turn")
 def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
-    return DopynionResponseStr(game_id=game_id, decision="OK")
+
+    actions_remaining_by_game[game_id] = calculate_actions()
+    buys_remaining_by_game[game_id] = calculate_buys()
+
+    print("========== START TURN ==========", flush=True)
+    print("GAME ID :", game_id, flush=True)
+    print("ACTIONS :", actions_remaining_by_game[game_id], flush=True)
+    print("BUYS :", buys_remaining_by_game[game_id], flush=True)
+
+    return DopynionResponseStr(
+        game_id=game_id,
+        decision="OK",
+    )
 
 
 @app.post("/play")
@@ -138,23 +152,26 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
     # 1. PHASE ACTION
     # -----------------------------------------
 
-    actions_remaining = calculate_actions()
+    actions_remaining = actions_remaining_by_game[game_id]
 
     print("ACTIONS :", actions_remaining, flush=True)
 
     if actions_remaining > 0:
         action = choose_action(player.hand)
 
-        if action.startswith("ACTION"):
-            actions_remaining -= 1
+        if action is not None:
+            print("ACTION :", action, flush=True)
 
-        print("ACTION :", action, flush=True)
-        print("ACTIONS RESTANTES :", actions_remaining, flush=True)
+            if action.startswith("ACTION"):
+                actions_remaining_by_game[game_id] -= 1
 
-        return DopynionResponseStr(
-            game_id=game_id,
-            decision=action,
-        )
+            print("ACTION :", action, flush=True)
+            print("ACTIONS RESTANTES :", actions_remaining, flush=True)
+
+            return DopynionResponseStr(
+                game_id=game_id,
+                decision=action,
+            )
 
     # -----------------------------------------
     # 2. PHASE ACHAT
@@ -164,7 +181,7 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
 
     print("MONEY :", money, flush=True)
 
-    buys_remaining = calculate_buys()
+    buys_remaining = buys_remaining_by_game[game_id]
 
     print("BUYS :", buys_remaining, flush=True)
 
@@ -172,7 +189,7 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
         decision = choose_buy(money, game.stock)
 
         if decision.startswith("BUY"):
-            buys_remaining -= 1
+            buys_remaining_by_game[game_id] -= 1
 
         print("BUY :", decision, flush=True)
         print("BUYS RESTANTS :", buys_remaining, flush=True)

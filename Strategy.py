@@ -1,4 +1,4 @@
-from dopynion.data_model import CardName, Cards
+from dopynion.data_model import CardName
 
 
 def calculate_money(hand) -> int:
@@ -70,14 +70,13 @@ def calculate_actions() -> int:
     return 1
 
 
-def choose_action(hand: Cards) -> str:
+def choose_action(hand) -> str:
     """Choisit une carte Action à jouer."""
+    if hand.quantities.get(CardName.SMITHY, 0) > 0:
+        return f"ACTION {CardName.SMITHY.value}"
 
     if hand.quantities.get(CardName.VILLAGE, 0) > 0:
         return f"ACTION {CardName.VILLAGE.value}"
-
-    if hand.quantities.get(CardName.SMITHY, 0) > 0:
-        return f"ACTION {CardName.SMITHY.value}"
 
     if hand.quantities.get(CardName.MARKET, 0) > 0:
         return f"ACTION {CardName.MARKET.value}"
@@ -91,4 +90,4 @@ def choose_action(hand: Cards) -> str:
     if hand.quantities.get(CardName.LABORATORY, 0) > 0:
         return f"ACTION {CardName.LABORATORY.value}"
 
-    return "END_TURN"
+    return None
