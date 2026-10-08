@@ -15,7 +15,15 @@ from fastapi import Depends, FastAPI, Header, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
-from Strategy import choose_discard, choose_trash, calculate_money, choose_buy
+from Strategy import (
+    choose_discard,
+    choose_trash,
+    calculate_money,
+    choose_buy,
+    choose_action,
+    calculate_buys,
+    calculate_actions,
+)
 
 app = FastAPI()
 
@@ -112,31 +120,79 @@ def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
 
 @app.post("/play")
 def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
-    # Notre royaume est identifié par le game_id.
-    print(game)
-    # Le premier joueur correspond à notre royaume.
+
+    print("\n========== PLAY ==========", flush=True)
+
+    # Recherche de notre royaume
     player = next(player for player in game.players if "Koopa Dominion" in player.name)
 
-    print(player)
-    print(player.hand)
-    # Sécurité : si aucune main n'est disponible,
-    # on termine le tour.
+    print("PLAYER :", player, flush=True)
+    print("HAND :", player.hand, flush=True)
+
+    # Sécurité
     if player.hand is None:
         return DopynionResponseStr(
             game_id=game_id,
             decision="END_TURN",
         )
 
-    # Calcul de l'argent disponible dans la main.
+    # -----------------------------------------
+    # 1. PHASE ACTION
+    # -----------------------------------------
+
+    actions_remaining = calculate_actions()
+
+    print("ACTIONS :", actions_remaining, flush=True)
+
+    if actions_remaining > 0 and action != "NO_ACTION":
+        action = choose_action(player.hand)
+
+        if action.startswith("ACTION"):
+            actions_remaining -= 1
+
+        print("ACTION :", action, flush=True)
+        print("ACTIONS RESTANTES :", actions_remaining, flush=True)
+
+        return DopynionResponseStr(
+            game_id=game_id,
+            decision=action,
+        )
+
+    # -----------------------------------------
+    # 2. PHASE ACHAT
+    # -----------------------------------------
+
     money = calculate_money(player.hand)
-    print(money)
-    # Stratégie Big Money.
-    decision = choose_buy(money, game.stock)
-    print(decision)
+
+    print("MONEY :", money, flush=True)
+
+    buys_remaining = calculate_buys()
+
+    print("BUYS :", buys_remaining, flush=True)
+
+    if buys_remaining > 0:
+        decision = choose_buy(money, game.stock)
+
+        if decision.startswith("BUY"):
+            buys_remaining -= 1
+
+        print("BUY :", decision, flush=True)
+        print("BUYS RESTANTS :", buys_remaining, flush=True)
+
+        return DopynionResponseStr(
+            game_id=game_id,
+            decision=decision,
+        )
+
+    # -----------------------------------------
+    # 3. FIN DU TOUR
+    # -----------------------------------------
+
+    print("END TURN", flush=True)
 
     return DopynionResponseStr(
         game_id=game_id,
-        decision=decision,
+        decision="END_TURN",
     )
 
 

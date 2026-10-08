@@ -58,3 +58,37 @@ def choose_trash(hand: list[CardName]) -> CardName:
         return CardName.COPPER
 
     return hand[0]
+
+
+def calculate_buys() -> int:
+    """Nombre de Buy disponibles au début du tour."""
+    return 1
+
+
+def calculate_actions() -> int:
+    """Nombre d'actions disponibles au début du tour."""
+    return 1
+
+
+def choose_action(hand: Cards) -> str:
+    """Choisit une carte Action à jouer."""
+
+    if hand.quantities.get(CardName.VILLAGE, 0) > 0:
+        return f"ACTION {CardName.VILLAGE.value}"
+
+    if hand.quantities.get(CardName.SMITHY, 0) > 0:
+        return f"ACTION {CardName.SMITHY.value}"
+
+    if hand.quantities.get(CardName.MARKET, 0) > 0:
+        return f"ACTION {CardName.MARKET.value}"
+
+    if hand.quantities.get(CardName.WOODCUTTER, 0) > 0:
+        return f"ACTION {CardName.WOODCUTTER.value}"
+
+    if hand.quantities.get(CardName.FESTIVAL, 0) > 0:
+        return f"ACTION {CardName.FESTIVAL.value}"
+
+    if hand.quantities.get(CardName.LABORATORY, 0) > 0:
+        return f"ACTION {CardName.LABORATORY.value}"
+
+    return "NO_ACTION"
