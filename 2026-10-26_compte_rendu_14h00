@@ -1,0 +1,47 @@
+Compte rendu de réunion n°6
+
+Date :26 octobre 2026 à 14h00
+
+Groupe :3 – BOWSER
+
+Participants
+
+\- Client : Vincent POULAILLEAU
+
+\- Équipe de développement : Alexandre, Jean-Eudes, Pauline et Matteo
+
+\- Absent : Younes
+
+1\. Nouvelles fonctionnalités et évolutions
+
+La réunion a porté sur l'évolution des requêtes envoyées par l'arbitre à la suite de certains événements du jeu.
+
+De nouvelles requêtes permettent désormais de distinguer les actions nécessitant une confirmation de celles dont l'exécution est obligatoire.
+
+1.1. Gestion de l'écartement des cartes (Trash)
+
+\- confirm trash card for hand : demande au joueur de confirmer s'il souhaite ou non écarter une carte de sa main. Cette action est facultative.
+
+\- trash card for hand : impose au joueur d'écarter une carte de sa main. En l'absence de réponse valide, l'arbitre applique son choix par défaut.
+
+1.2. Gestion de la défausse des cartes (Discard)
+
+\- confirm discard card for hand : demande au joueur de confirmer s'il souhaite ou non défausser une carte de sa main. Cette action est facultative.
+
+\- discard card for hand : impose au joueur de défausser une carte de sa main. En l'absence de réponse valide, l'arbitre applique son choix par défaut.
+
+\- confirm discard deck : demande au joueur de confirmer s'il souhaite ou non défausser sa pioche.
+
+1.3. Points à retenir
+
+Les évolutions présentées nécessitent d'adapter la gestion des requêtes côté serveur afin de :
+
+\- Distinguer les actions facultatives des actions obligatoires.
+
+\- Gérer correctement les réponses de confirmation (oui/non).
+
+\- Retourner une réponse conforme au protocole attendu par l'arbitre.
+
+\- Prendre en compte les comportements par défaut de l'arbitre lorsque le joueur ne fournit pas de réponse valide.
+
+L'objectif est d'assurer une gestion cohérente des différentes situations de jeu et de fiabiliser les interactions entre le serveur et l'arbitre. |
