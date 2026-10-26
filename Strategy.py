@@ -1,6 +1,29 @@
 from dopynion.data_model import CardName
 
 
+def create_starting_deck() -> dict:
+    """Crée le deck de départ d'une partie."""
+
+    return {
+        CardName.COPPER: 7,
+        CardName.ESTATE: 3,
+    }
+
+
+def record_purchase(deck: dict, decision: str) -> None:
+    """Ajoute au deck la carte correspondant à un achat."""
+
+    if not decision.startswith("BUY "):
+        return
+
+    card_name = decision.split(" ", 1)[1]
+
+    for card in CardName:
+        if card.value == card_name:
+            deck[card] = deck.get(card, 0) + 1
+            return
+
+
 def calculate_money(hand) -> int:
     """Calcule l'argent disponible dans la main."""
 

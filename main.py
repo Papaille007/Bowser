@@ -24,11 +24,14 @@ from Strategy import (
     calculate_buys,
     calculate_actions,
     get_action_bonuses,
+    create_starting_deck,
+    record_purchase,
 )
 
 app = FastAPI()
 actions_remaining_by_game = {}
 buys_remaining_by_game = {}
+decks_by_game = {}
 
 #####################################################
 # Data model for responses
@@ -119,6 +122,7 @@ def start_game(game_id: GameIdDependency) -> DopynionResponseStr:
 @app.get("/start_turn")
 def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
 
+    decks_by_game[game_id] = create_starting_deck()
     actions_remaining_by_game[game_id] = calculate_actions()
     buys_remaining_by_game[game_id] = calculate_buys()
 
@@ -148,6 +152,11 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
             game_id=game_id,
             decision="END_TURN",
         )
+    # Initialiser le deck une seule fois par partie
+    if game_id not in decks_by_game:
+        decks_by_game[game_id] = create_starting_deck()
+
+    deck = decks_by_game[game_id]
 
     # -----------------------------------------
     # 1. PHASE ACTION
@@ -199,11 +208,17 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
     if buys_remaining > 0:
         decision = choose_buy(money, game.stock)
 
-        if decision.startswith("BUY"):
+        if decision.startswith("BUY "):
+            record_purchase(deck, decision)
             buys_remaining_by_game[game_id] -= 1
 
         print("BUY :", decision, flush=True)
-        print("BUYS RESTANTS :", buys_remaining, flush=True)
+        print("DECK :", deck, flush=True)
+        print(
+            "ACHATS RESTANTS :",
+            buys_remaining_by_game[game_id],
+            flush=True,
+        )
 
         return DopynionResponseStr(
             game_id=game_id,
