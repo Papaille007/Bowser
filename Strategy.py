@@ -67,124 +67,100 @@ def calculate_money(hand) -> int:
 
 
 def choose_buy(money: int, stock, deck=None) -> str:
-    """Choisit quoi acheter selon l'argent, le stock et le deck."""
+    """Stratégie d'achat : économie, puis moteur, puis points."""
 
     if deck is None:
         deck = {}
 
-    # --------------------------------------------------
-    # 1. Vérification du stock disponible
-    # --------------------------------------------------
-
-    province_available = card_count(stock, "province") > 0
-    duchy_available = card_count(stock, "duchy") > 0
-
-    gold_available = card_count(stock, "gold") > 0
-    silver_available = card_count(stock, "silver") > 0
-
-    witch_available = card_count(stock, "witch") > 0
-    councilroom_available = card_count(stock, "councilroom") > 0
-    laboratory_available = card_count(stock, "laboratory") > 0
-    smithy_available = card_count(stock, "smithy") > 0
-    village_available = card_count(stock, "village") > 0
-    festival_available = card_count(stock, "festival") > 0
-    market_available = card_count(stock, "market") > 0
-    farmingvillage_available = card_count(stock, "farmingvillage") > 0
-    woodcutter_available = card_count(stock, "woodcutter") > 0
-
-    provinces_left = card_count(stock, "province")
-
-    # --------------------------------------------------
-    # 2. Quantités déjà possédées
-    # --------------------------------------------------
+    def available(name: str) -> bool:
+        return card_count(stock, name) > 0
 
     def owned(name: str) -> int:
         card = find_card(name)
-
         if card is None:
             return 0
-
         return deck.get(card, 0)
 
     def buy(name: str) -> str:
         card = find_card(name)
+        if card is None:
+            return "END_TURN"
         return f"BUY {card.value}"
 
-    # --------------------------------------------------
-    # 3. Acheter les points de victoire
-    # --------------------------------------------------
+    provinces_left = card_count(stock, "province")
+    duchies_left = card_count(stock, "duchy")
 
-    if money >= 8 and province_available:
+    # 1. Les points avant tout dès que possible
+    if money >= 8 and available("province"):
         return buy("province")
 
-    # --------------------------------------------------
-    # 4. Fin de partie : Duchés
-    # --------------------------------------------------
-
-    if provinces_left <= 4 and money >= 5 and duchy_available:
+    # 2. Quand les Provinces commencent à manquer,
+    # les Duchés deviennent une priorité
+    if provinces_left <= 4 and money >= 5 and available("duchy"):
         return buy("duchy")
 
-    # --------------------------------------------------
-    # 5. Renforcer l'économie
-    # --------------------------------------------------
-
-    if money >= 6 and gold_available:
+    # 3. Renforcer rapidement l'économie
+    if money >= 6 and available("gold"):
         return buy("gold")
 
-    # --------------------------------------------------
-    # 6. Attaque et pioche : Sorcière
-    # --------------------------------------------------
+    if money >= 3 and available("silver"):
+        # À 3 ou 4, l'Argent est une valeur sûre,
+        # sauf si une carte d'action précise est préférable.
+        if money < 5:
+            return buy("silver")
 
-    if money >= 5 and witch_available and owned("witch") < 2:
+    # 4. Cartes d'action fortes : éviter d'en acheter trop
+    if money >= 5 and available("witch") and owned("witch") < 2:
         return buy("witch")
 
-    # --------------------------------------------------
-    # 7. Développer la pioche
-    # --------------------------------------------------
-
-    if money >= 5 and laboratory_available and owned("laboratory") < 2:
+    if money >= 5 and available("laboratory") and owned("laboratory") < 2:
         return buy("laboratory")
 
-    if money >= 5 and councilroom_available and owned("councilroom") < 2:
+    if money >= 5 and available("councilroom") and owned("councilroom") < 1:
         return buy("councilroom")
 
-    if money >= 4 and smithy_available and owned("smithy") < 2:
+    if money >= 4 and available("smithy") and owned("smithy") < 2:
         return buy("smithy")
 
-    # --------------------------------------------------
-    # 8. Améliorer le moteur d'actions et d'achats
-    # --------------------------------------------------
+    # 5. Village seulement si le deck possède déjà
+    # assez de cartes d'action à jouer
+    terminal_actions = (
+        owned("smithy") + owned("laboratory") + owned("councilroom") + owned("witch")
+    )
 
-    if money >= 3 and village_available and owned("village") < 2:
+    if (
+        money >= 3
+        and available("village")
+        and owned("village") < 2
+        and terminal_actions > owned("village")
+    ):
         return buy("village")
 
-    if money >= 5 and festival_available and owned("festival") < 2:
+    if money >= 5 and available("festival") and owned("festival") < 2:
         return buy("festival")
 
-    if money >= 5 and market_available and owned("market") < 2:
+    if money >= 5 and available("market") and owned("market") < 2:
         return buy("market")
 
-    if money >= 4 and farmingvillage_available and owned("farmingvillage") < 2:
+    if money >= 4 and available("farmingvillage") and owned("farmingvillage") < 2:
         return buy("farmingvillage")
 
-    if money >= 3 and woodcutter_available and owned("woodcutter") < 2:
+    if money >= 3 and available("woodcutter") and owned("woodcutter") < 1:
         return buy("woodcutter")
 
-    # --------------------------------------------------
-    # 9. Argent : achat économique par défaut
-    # --------------------------------------------------
-
-    if money >= 3 and silver_available:
+    # 6. Repli économique
+    if money >= 3 and available("silver"):
         return buy("silver")
 
-    # --------------------------------------------------
-    # 10. Duché de secours en fin de partie
-    # --------------------------------------------------
-
-    if money >= 5 and duchy_available and provinces_left <= 2:
+    # Duché de secours si la fin de partie est proche
+    if provinces_left <= 2 and money >= 5 and available("duchy"):
         return buy("duchy")
 
-    # Ne pas acheter de Cuivre par défaut
+    # Estate uniquement en toute fin de partie
+    if provinces_left <= 2 and money >= 2 and available("estate"):
+        return buy("estate")
+
+    # Surtout pas de Cuivre acheté automatiquement
     return "END_TURN"
 
 
