@@ -78,27 +78,24 @@ def choose_buy(money: int, stock, deck=None) -> str:
 
     province_available = card_count(stock, "province") > 0
     duchy_available = card_count(stock, "duchy") > 0
-    estate_available = card_count(stock, "estate") > 0
 
     gold_available = card_count(stock, "gold") > 0
     silver_available = card_count(stock, "silver") > 0
-    copper_available = card_count(stock, "copper") > 0
 
-    councilroom_available = card_count(stock, "councilroom") > 0
-    distantshore_available = card_count(stock, "distantshore") > 0
     witch_available = card_count(stock, "witch") > 0
-    farmingvillage_available = card_count(stock, "farmingvillage") > 0
-    hireling_available = card_count(stock, "hireling") > 0
-
-    festival_available = card_count(stock, "festival") > 0
+    councilroom_available = card_count(stock, "councilroom") > 0
     laboratory_available = card_count(stock, "laboratory") > 0
-    market_available = card_count(stock, "market") > 0
     smithy_available = card_count(stock, "smithy") > 0
     village_available = card_count(stock, "village") > 0
+    festival_available = card_count(stock, "festival") > 0
+    market_available = card_count(stock, "market") > 0
+    farmingvillage_available = card_count(stock, "farmingvillage") > 0
     woodcutter_available = card_count(stock, "woodcutter") > 0
 
+    provinces_left = card_count(stock, "province")
+
     # --------------------------------------------------
-    # 2. Suivi de la composition du deck
+    # 2. Quantités déjà possédées
     # --------------------------------------------------
 
     def owned(name: str) -> int:
@@ -109,86 +106,85 @@ def choose_buy(money: int, stock, deck=None) -> str:
 
         return deck.get(card, 0)
 
-    provinces_left = card_count(stock, "province")
-    duchy_left = card_count(stock, "duchy")
-    # --------------------------------------------------
-    # 3. Fin de partie : acheter des cartes Victoire
-    # --------------------------------------------------
-
-    if provinces_left <= 4 or duchy_left <= 4:
-        if money >= 8 and province_available:
-            return f"BUY {find_card('province').value}"
-        if money >= 5 and duchy_available:
-            return f"BUY {find_card('duchy').value}"
+    def buy(name: str) -> str:
+        card = find_card(name)
+        return f"BUY {card.value}"
 
     # --------------------------------------------------
-    # 4. Développer la pioche et le moteur du deck
-    # --------------------------------------------------
-
-    # Les cartes qui font piocher : limiter les doublons
-    if money >= 5 and councilroom_available and owned("councilroom") < 2:
-        return f"BUY {find_card('councilroom').value}"
-
-    if money >= 5 and laboratory_available and owned("laboratory") < 2:
-        return f"BUY {find_card('laboratory').value}"
-
-    if money >= 4 and smithy_available and owned("smithy") < 2:
-        return f"BUY {find_card('smithy').value}"
-
-    if money >= 5 and witch_available and owned("witch") < 2:
-        return f"BUY {find_card('witch').value}"
-
-    if money >= 5 and distantshore_available and owned("distantshore") < 2:
-        return f"BUY {find_card('distantshore').value}"
-
-    # --------------------------------------------------
-    # 5. Améliorer les actions et les achats
-    # --------------------------------------------------
-
-    if money >= 3 and village_available and owned("village") < 2:
-        return f"BUY {find_card('village').value}"
-
-    if money >= 4 and farmingvillage_available and owned("farmingvillage") < 2:
-        return f"BUY {find_card('farmingvillage').value}"
-
-    if money >= 5 and festival_available and owned("festival") < 2:
-        return f"BUY {find_card('festival').value}"
-
-    if money >= 5 and market_available and owned("market") < 2:
-        return f"BUY {find_card('market').value}"
-
-    if money >= 3 and woodcutter_available and owned("woodcutter") < 2:
-        return f"BUY {find_card('woodcutter').value}"
-
-    if money >= 6 and hireling_available and owned("hireling") < 2:
-        return f"BUY {find_card('hireling').value}"
-
-    # --------------------------------------------------
-    # 6. Développer le pouvoir d'achat
-    # --------------------------------------------------
-
-    if money >= 6 and gold_available:
-        return f"BUY {find_card('gold').value}"
-
-    if money >= 3 and silver_available:
-        return f"BUY {find_card('silver').value}"
-
-    # --------------------------------------------------
-    # 7. Autres achats de fin de partie
+    # 3. Acheter les points de victoire
     # --------------------------------------------------
 
     if money >= 8 and province_available:
-        return f"BUY {find_card('province').value}"
+        return buy("province")
 
-    if money >= 5 and duchy_available:
-        return f"BUY {find_card('duchy').value}"
+    # --------------------------------------------------
+    # 4. Fin de partie : Duchés
+    # --------------------------------------------------
 
-    if money >= 2 and estate_available and provinces_left <= 2:
-        return f"BUY {find_card('estate').value}"
+    if provinces_left <= 4 and money >= 5 and duchy_available:
+        return buy("duchy")
 
-    if copper_available:
-        return f"BUY {find_card('copper').value}"
+    # --------------------------------------------------
+    # 5. Renforcer l'économie
+    # --------------------------------------------------
 
+    if money >= 6 and gold_available:
+        return buy("gold")
+
+    # --------------------------------------------------
+    # 6. Attaque et pioche : Sorcière
+    # --------------------------------------------------
+
+    if money >= 5 and witch_available and owned("witch") < 2:
+        return buy("witch")
+
+    # --------------------------------------------------
+    # 7. Développer la pioche
+    # --------------------------------------------------
+
+    if money >= 5 and laboratory_available and owned("laboratory") < 2:
+        return buy("laboratory")
+
+    if money >= 5 and councilroom_available and owned("councilroom") < 2:
+        return buy("councilroom")
+
+    if money >= 4 and smithy_available and owned("smithy") < 2:
+        return buy("smithy")
+
+    # --------------------------------------------------
+    # 8. Améliorer le moteur d'actions et d'achats
+    # --------------------------------------------------
+
+    if money >= 3 and village_available and owned("village") < 2:
+        return buy("village")
+
+    if money >= 5 and festival_available and owned("festival") < 2:
+        return buy("festival")
+
+    if money >= 5 and market_available and owned("market") < 2:
+        return buy("market")
+
+    if money >= 4 and farmingvillage_available and owned("farmingvillage") < 2:
+        return buy("farmingvillage")
+
+    if money >= 3 and woodcutter_available and owned("woodcutter") < 2:
+        return buy("woodcutter")
+
+    # --------------------------------------------------
+    # 9. Argent : achat économique par défaut
+    # --------------------------------------------------
+
+    if money >= 3 and silver_available:
+        return buy("silver")
+
+    # --------------------------------------------------
+    # 10. Duché de secours en fin de partie
+    # --------------------------------------------------
+
+    if money >= 5 and duchy_available and provinces_left <= 2:
+        return buy("duchy")
+
+    # Ne pas acheter de Cuivre par défaut
     return "END_TURN"
 
 
