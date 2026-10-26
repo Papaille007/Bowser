@@ -103,11 +103,8 @@ def choose_buy(money: int, stock, deck=None) -> str:
     if money >= 6 and available("gold"):
         return buy("gold")
 
-    if money >= 3 and available("silver"):
-        # À 3 ou 4, l'Argent est une valeur sûre,
-        # sauf si une carte d'action précise est préférable.
-        if money < 5:
-            return buy("silver")
+    if money >= 3 and available("silver") and money < 5:
+        return buy("silver")
 
     # 4. Cartes d'action fortes : éviter d'en acheter trop
     if money >= 5 and available("witch") and owned("witch") < 2:
