@@ -1,0 +1,45 @@
+Bonjour à tous,
+
+Vous trouverez ci-dessous le compte rendu de la réunion du mercredi 08 octobre à 14h40 :
+
+**Groupe :** 3
+**Personnes présentes :**
+
+- Client : Vincent POULAILLEAU
+- Équipe de développement : Alexandre, Jean-Eudes, Pauline, Matteo
+
+Absents : Younes
+
+**1\. Cartes de base (Trésors & Victoires)**
+
+| Carte            | Coût | Valeur / Points | Note                                                          |
+| ---------------- | ---- | --------------- | ------------------------------------------------------------- |
+| Copper (Cuivre)  | 0    | 1               | Trésor                                                        |
+| Silver (Argent)  | 3    | 2               | Trésor                                                        |
+| Gold (Or)        | 6    | 3               | Trésor                                                        |
+| Estate (Domaine) | 2    | 1               | Victoire (points en fin de partie)                            |
+| Duchy (Duché)    | 5    | 3               | Victoire (points en fin de partie)                            |
+| Province         | 8    | 6               | Victoire ; déclenche la fin de partie si toutes sont achetées |
+
+**2\. Cartes Action (Coûts & Avantages)**
+
+- **Festival :**
+  - Coût : 5
+  - Effets : +2 actions, +1 achat, +2 cuivres (monnaie)
+- **Laboratory :**
+  - Coût : 5
+  - Effets : +2 actions, +2 cartes
+- **Market :**
+  - Coût : 5
+  - Effets : +1 carte, +1 action, +1 achat, +1 cuivre (monnaie)
+- **Smithy :**
+  - Coût : 4
+  - Effets : +3 cartes
+
+Les conditions de fin de parties sont :
+
+- Plus de cartes provinces
+- 3 piles vides
+- 150 tours
+
+Bonne journée,
