@@ -206,7 +206,7 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
     print("BUYS :", buys_remaining, flush=True)
 
     if buys_remaining > 0:
-        decision = choose_buy(money, game.stock)
+        decision = choose_buy(money, game.stock, decks_by_game[game_id])
 
         if decision.startswith("BUY "):
             record_purchase(deck, decision)

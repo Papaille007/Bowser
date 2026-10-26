@@ -1,6 +1,36 @@
 from dopynion.data_model import CardName
 
 
+def find_card(name: str):
+    """Retrouve une carte à partir de son nom ou de sa valeur."""
+
+    normalized_name = name.lower().replace("_", "").replace(" ", "")
+
+    for card in CardName:
+        enum_name = card.name.lower().replace("_", "").replace(" ", "")
+        enum_value = str(card.value).lower().replace("_", "").replace(" ", "")
+
+        if normalized_name in (enum_name, enum_value):
+            return card
+
+    return None
+
+
+def card_count(cards, name: str) -> int:
+    """Renvoie le nombre d'exemplaires d'une carte."""
+
+    card = find_card(name)
+
+    if card is None:
+        return 0
+
+    return (
+        cards.quantities.get(card, 0)
+        if hasattr(cards, "quantities")
+        else cards.get(card, 0)
+    )
+
+
 def create_starting_deck() -> dict:
     """Crée le deck de départ d'une partie."""
 
@@ -36,67 +66,129 @@ def calculate_money(hand) -> int:
     return money
 
 
-def choose_buy(money: int, stock) -> str:
-    """Choisit quoi acheter selon l'argent et le stock disponible."""
+def choose_buy(money: int, stock, deck=None) -> str:
+    """Choisit quoi acheter selon l'argent, le stock et le deck."""
 
-    # Vérification de la disponibilité des cartes
-    province_available = stock.quantities.get(CardName.PROVINCE, 0) > 0
-    duchy_available = stock.quantities.get(CardName.DUCHY, 0) > 0
-    estate_available = stock.quantities.get(CardName.ESTATE, 0) > 0
+    if deck is None:
+        deck = {}
 
-    gold_available = stock.quantities.get(CardName.GOLD, 0) > 0
-    silver_available = stock.quantities.get(CardName.SILVER, 0) > 0
-    copper_available = stock.quantities.get(CardName.COPPER, 0) > 0
+    # --------------------------------------------------
+    # 1. Vérification du stock disponible
+    # --------------------------------------------------
 
-    festival_available = stock.quantities.get(CardName.FESTIVAL, 0) > 0
-    laboratory_available = stock.quantities.get(CardName.LABORATORY, 0) > 0
-    market_available = stock.quantities.get(CardName.MARKET, 0) > 0
-    smithy_available = stock.quantities.get(CardName.SMITHY, 0) > 0
-    village_available = stock.quantities.get(CardName.VILLAGE, 0) > 0
-    woodcutter_available = stock.quantities.get(CardName.WOODCUTTER, 0) > 0
-    councilroom_available = stock.quantities.get(CardName.COUNCILROOM, 0) > 0
-    witch_available = stock.quantities.get(CardName.WITCH, 0) > 0
-    curse_available = stock.quantities.get(CardName.CURSE, 0) > 0
-    hireling_available = stock.quantities.get(CardName.HIRELING, 0) > 0
-    distantshore_available = stock.quantities.get(CardName.DISTANTSHORE, 0) > 0
-    farmingvillage_available = stock.quantities.get(CardName.FARMINGVILLAGE, 0) > 0
+    province_available = card_count(stock, "province") > 0
+    duchy_available = card_count(stock, "duchy") > 0
+    estate_available = card_count(stock, "estate") > 0
 
-    # Stratégie d'achat
-    if money >= 8 and province_available:
-        return f"BUY {CardName.PROVINCE.value}"
+    gold_available = card_count(stock, "gold") > 0
+    silver_available = card_count(stock, "silver") > 0
+    copper_available = card_count(stock, "copper") > 0
+
+    councilroom_available = card_count(stock, "councilroom") > 0
+    distantshore_available = card_count(stock, "distantshore") > 0
+    witch_available = card_count(stock, "witch") > 0
+    farmingvillage_available = card_count(stock, "farmingvillage") > 0
+    hireling_available = card_count(stock, "hireling") > 0
+
+    festival_available = card_count(stock, "festival") > 0
+    laboratory_available = card_count(stock, "laboratory") > 0
+    market_available = card_count(stock, "market") > 0
+    smithy_available = card_count(stock, "smithy") > 0
+    village_available = card_count(stock, "village") > 0
+    woodcutter_available = card_count(stock, "woodcutter") > 0
+
+    # --------------------------------------------------
+    # 2. Suivi de la composition du deck
+    # --------------------------------------------------
+
+    def owned(name: str) -> int:
+        card = find_card(name)
+
+        if card is None:
+            return 0
+
+        return deck.get(card, 0)
+
+    provinces_left = card_count(stock, "province")
+    duchy_left = card_count(stock, "duchy")
+    # --------------------------------------------------
+    # 3. Fin de partie : acheter des cartes Victoire
+    # --------------------------------------------------
+
+    if provinces_left <= 4:
+        if money >= 8 and province_available:
+            return f"BUY {find_card('province').value}"
+    if duchy_left <= 4:
+        if money >= 5 and duchy_available:
+            return f"BUY {find_card('duchy').value}"
+
+    # --------------------------------------------------
+    # 4. Développer la pioche et le moteur du deck
+    # --------------------------------------------------
+
+    # Les cartes qui font piocher : limiter les doublons
+    if money >= 5 and councilroom_available and owned("councilroom") < 2:
+        return f"BUY {find_card('councilroom').value}"
+
+    if money >= 5 and laboratory_available and owned("laboratory") < 2:
+        return f"BUY {find_card('laboratory').value}"
+
+    if money >= 4 and smithy_available and owned("smithy") < 2:
+        return f"BUY {find_card('smithy').value}"
+
+    if money >= 5 and witch_available and owned("witch") < 2:
+        return f"BUY {find_card('witch').value}"
+
+    if money >= 5 and distantshore_available and owned("distantshore") < 2:
+        return f"BUY {find_card('distantshore').value}"
+
+    # --------------------------------------------------
+    # 5. Améliorer les actions et les achats
+    # --------------------------------------------------
+
+    if money >= 3 and village_available and owned("village") < 2:
+        return f"BUY {find_card('village').value}"
+
+    if money >= 4 and farmingvillage_available and owned("farmingvillage") < 2:
+        return f"BUY {find_card('farmingvillage').value}"
+
+    if money >= 5 and festival_available and owned("festival") < 2:
+        return f"BUY {find_card('festival').value}"
+
+    if money >= 5 and market_available and owned("market") < 2:
+        return f"BUY {find_card('market').value}"
+
+    if money >= 3 and woodcutter_available and owned("woodcutter") < 2:
+        return f"BUY {find_card('woodcutter').value}"
+
+    if money >= 6 and hireling_available and owned("hireling") < 2:
+        return f"BUY {find_card('hireling').value}"
+
+    # --------------------------------------------------
+    # 6. Développer le pouvoir d'achat
+    # --------------------------------------------------
 
     if money >= 6 and gold_available:
-        return f"BUY {CardName.GOLD.value}"
-
-    if money >= 5 and duchy_available:
-        return f"BUY {CardName.DUCHY.value}"
-
-    if money >= 5 and festival_available:
-        return f"BUY {CardName.FESTIVAL.value}"
-
-    if money >= 5 and laboratory_available:
-        return f"BUY {CardName.LABORATORY.value}"
-
-    if money >= 5 and market_available:
-        return f"BUY {CardName.MARKET.value}"
-
-    if money >= 4 and smithy_available:
-        return f"BUY {CardName.SMITHY.value}"
+        return f"BUY {find_card('gold').value}"
 
     if money >= 3 and silver_available:
-        return f"BUY {CardName.SILVER.value}"
+        return f"BUY {find_card('silver').value}"
 
-    if money >= 3 and village_available:
-        return f"BUY {CardName.VILLAGE.value}"
+    # --------------------------------------------------
+    # 7. Autres achats de fin de partie
+    # --------------------------------------------------
 
-    if money >= 3 and woodcutter_available:
-        return f"BUY {CardName.WOODCUTTER.value}"
+    if money >= 8 and province_available:
+        return f"BUY {find_card('province').value}"
 
-    if money >= 2 and estate_available:
-        return f"BUY {CardName.ESTATE.value}"
+    if money >= 5 and duchy_available:
+        return f"BUY {find_card('duchy').value}"
+
+    if money >= 2 and estate_available and provinces_left <= 2:
+        return f"BUY {find_card('estate').value}"
 
     if copper_available:
-        return f"BUY {CardName.COPPER.value}"
+        return f"BUY {find_card('copper').value}"
 
     return "END_TURN"
 
@@ -163,24 +255,47 @@ def get_action_bonuses(action: str) -> tuple[int, int]:
     return bonuses.get(card_name, (0, 0))
 
 
-def choose_action(hand) -> str:
+def choose_action(hand) -> str | None:
     """Choisit une carte Action à jouer."""
-    if hand.quantities.get(CardName.SMITHY, 0) > 0:
-        return f"ACTION {CardName.SMITHY.value}"
 
-    if hand.quantities.get(CardName.VILLAGE, 0) > 0:
-        return f"ACTION {CardName.VILLAGE.value}"
+    # 1. Cartes qui permettent de jouer plus d'actions
+    action_cards = [
+        "village",
+        "farmingvillage",
+        "festival",
+        "laboratory",
+        "market",
+    ]
 
-    if hand.quantities.get(CardName.MARKET, 0) > 0:
-        return f"ACTION {CardName.MARKET.value}"
+    for name in action_cards:
+        card = find_card(name)
 
-    if hand.quantities.get(CardName.WOODCUTTER, 0) > 0:
-        return f"ACTION {CardName.WOODCUTTER.value}"
+        if card is not None and hand.quantities.get(card, 0) > 0:
+            return f"ACTION {card.value}"
 
-    if hand.quantities.get(CardName.FESTIVAL, 0) > 0:
-        return f"ACTION {CardName.FESTIVAL.value}"
+    # 2. Cartes qui font piocher des cartes
+    draw_cards = [
+        "councilroom",
+        "witch",
+        "smithy",
+        "distantshore",
+    ]
 
-    if hand.quantities.get(CardName.LABORATORY, 0) > 0:
-        return f"ACTION {CardName.LABORATORY.value}"
+    for name in draw_cards:
+        card = find_card(name)
+
+        if card is not None and hand.quantities.get(card, 0) > 0:
+            return f"ACTION {card.value}"
+
+    # 3. Autres cartes Action
+    card = find_card("hireling")
+
+    if card is not None and hand.quantities.get(card, 0) > 0:
+        return f"ACTION {card.value}"
+
+    card = find_card("woodcutter")
+
+    if card is not None and hand.quantities.get(card, 0) > 0:
+        return f"ACTION {card.value}"
 
     return None
