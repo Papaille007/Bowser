@@ -31,6 +31,12 @@ def choose_buy(money: int, stock) -> str:
     smithy_available = stock.quantities.get(CardName.SMITHY, 0) > 0
     village_available = stock.quantities.get(CardName.VILLAGE, 0) > 0
     woodcutter_available = stock.quantities.get(CardName.WOODCUTTER, 0) > 0
+    councilroom_available = stock.quantities.get(CardName.COUNCILROOM, 0) > 0
+    witch_available = stock.quantities.get(CardName.WITCH, 0) > 0
+    curse_available = stock.quantities.get(CardName.CURSE, 0) > 0
+    hireling_available = stock.quantities.get(CardName.HIRELING, 0) > 0
+    distantshore_available = stock.quantities.get(CardName.DISTANTSHORE, 0) > 0
+    farmingvillage_available = stock.quantities.get(CardName.FARMINGVILLAGE, 0) > 0
 
     # Stratégie d'achat
     if money >= 8 and province_available:
