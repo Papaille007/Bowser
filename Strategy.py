@@ -224,46 +224,82 @@ def get_action_bonuses(action: str) -> tuple[int, int]:
 
 
 def choose_action(hand) -> str | None:
-    """Choisit une carte Action à jouer."""
+    """Choisit l'action à jouer selon les cartes en main."""
 
-    # 1. Cartes qui permettent de jouer plus d'actions
-    action_cards = [
-        "village",
-        "farmingvillage",
-        "festival",
-        "laboratory",
-        "market",
-    ]
-
-    for name in action_cards:
+    def count(name: str) -> int:
         card = find_card(name)
+        if card is None:
+            return 0
+        return hand.quantities.get(card, 0)
 
-        if card is not None and hand.quantities.get(card, 0) > 0:
+    def play(name: str) -> str | None:
+        card = find_card(name)
+        if card is not None and count(name) > 0:
             return f"ACTION {card.value}"
+        return None
 
-    # 2. Cartes qui font piocher des cartes
-    draw_cards = [
-        "councilroom",
+    # Cartes qui consomment une action sans en rendre
+    terminal_actions = (
         "witch",
         "smithy",
+        "councilroom",
         "distantshore",
-    ]
+        "hireling",
+    )
 
-    for name in draw_cards:
-        card = find_card(name)
+    has_other_action = any(count(name) > 0 for name in terminal_actions)
 
-        if card is not None and hand.quantities.get(card, 0) > 0:
-            return f"ACTION {card.value}"
+    # 1. Festival : bonus d'actions, d'achat et d'argent
+    action = play("festival")
+    if action is not None:
+        return action
 
-    # 3. Autres cartes Action
-    card = find_card("hireling")
+    # 2. Débloquer les autres cartes Action
+    if has_other_action:
+        action = play("village")
+        if action is not None:
+            return action
 
-    if card is not None and hand.quantities.get(card, 0) > 0:
-        return f"ACTION {card.value}"
+        action = play("farmingvillage")
+        if action is not None:
+            return action
 
-    card = find_card("woodcutter")
+    # 3. Pioche qui permet généralement de continuer à jouer
+    action = play("laboratory")
+    if action is not None:
+        return action
 
-    if card is not None and hand.quantities.get(card, 0) > 0:
-        return f"ACTION {card.value}"
+    action = play("market")
+    if action is not None:
+        return action
+
+    # 4. Attaque et pioche
+    action = play("witch")
+    if action is not None:
+        return action
+
+    # 5. Pioche de cartes
+    action = play("councilroom")
+    if action is not None:
+        return action
+
+    action = play("smithy")
+    if action is not None:
+        return action
+
+    # 6. Autres cartes utiles
+    action = play("woodcutter")
+    if action is not None:
+        return action
+
+    # À conserver seulement si ces cartes sont bien jouables
+    # comme des actions dans la version de Dopynion utilisée.
+    action = play("distantshore")
+    if action is not None:
+        return action
+
+    action = play("hireling")
+    if action is not None:
+        return action
 
     return None
