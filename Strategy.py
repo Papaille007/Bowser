@@ -115,10 +115,9 @@ def choose_buy(money: int, stock, deck=None) -> str:
     # 3. Fin de partie : acheter des cartes Victoire
     # --------------------------------------------------
 
-    if provinces_left <= 4:
+    if provinces_left <= 4 or duchy_left <= 4:
         if money >= 8 and province_available:
             return f"BUY {find_card('province').value}"
-    if duchy_left <= 4:
         if money >= 5 and duchy_available:
             return f"BUY {find_card('duchy').value}"
 
