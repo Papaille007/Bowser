@@ -1,0 +1,27 @@
+Compte rendu réunion 5, 26/10/2026, 9h20
+
+**Groupe :** **3 / BOWSER**  
+Personnes présentes :
+
+- Client : Vincent POULAILLEAU
+- Équipe de développement : Alexandre, Jean-Eudes, Pauline, Matteo
+
+Absents : Younes
+
+1\. Nouvelles fonctionnalités & évolutions
+
+- Intégration du profil « Player développement » : création d'un second compte parallèle pour tester de nouvelles stratégies sans affecter le classement du compte principal. L'Elo de ce compte secondaire ne sera pas comptabilisé.
+- Jalon du 27/10/2026 : implémentation de la gestion des parties simultanées (plafond fixé à 30 parties en simultané).
+
+2\. Spécifications des nouvelles cartes
+
+| Carte                                | Coût      | Effets                                                                                                                    |
+| ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Village                              | 3 cuivres | +1 carte, +1 action                                                                                                       |
+| Bûcheron _(Woodcutter)_              | 3 cuivres | +1 achat, +2 pièces de pouvoir d'achat                                                                                    |
+| Chambre du conseil _(Council Room)_  | 5 cuivres | +4 cartes, +1 achat ; chaque adversaire pioche 1 carte                                                                    |
+| Malédiction _(Curse)_                | 0 cuivre  | \-1 point de victoire (pile limitée à 10 exemplaires par partie)                                                          |
+| Rivage lointain _(Distant Shore)_    | 6 cuivres | +2 cartes, +1 action, +1 Domaine, +2 points de victoire                                                                   |
+| Village agricole _(Farming Village)_ | 4 cuivres | +2 actions ; pioche jusqu'à révéler une carte Action ou Trésor (les autres cartes révélées vont au rebut / dans la fosse) |
+| Recrue _(Recruit)_                   | 6 cuivres | +1 carte à chaque tour jusqu'à la fin de la partie                                                                        |
+| Sorcière _(Witch)_                   | 5 cuivres | +2 cartes ; chaque adversaire reçoit 1 carte Malédiction                                                                  |
