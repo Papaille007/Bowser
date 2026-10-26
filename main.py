@@ -256,6 +256,7 @@ async def discard_card_from_hand(
     decision_input: Hand,
 ) -> DopynionResponseCardName:
     card = choose_discard(decision_input.hand)
+    print("DONNEES CONFIRMATION :", decision_input, flush=True)
 
     return DopynionResponseCardName(
         game_id=game_id,

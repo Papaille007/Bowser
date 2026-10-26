@@ -96,7 +96,7 @@ def choose_buy(money: int, stock, deck=None) -> str:
 
     # 2. Quand les Provinces commencent à manquer,
     # les Duchés deviennent une priorité
-    if provinces_left <= 4 and money >= 5 and available("duchy"):
+    if provinces_left <= 4 or duchies_left <= 4 and money >= 5 and available("duchy"):
         return buy("duchy")
 
     # 3. Renforcer rapidement l'économie
@@ -161,28 +161,74 @@ def choose_buy(money: int, stock, deck=None) -> str:
     return "END_TURN"
 
 
-def choose_discard(hand: list[CardName]) -> CardName:
-    """Choisit une carte à défausser."""
-
-    if CardName.ESTATE in hand:
-        return CardName.ESTATE
-
-    if CardName.COPPER in hand:
-        return CardName.COPPER
-
-    return hand[0]
+def card_quantity(hand, name: str) -> int:
+    """Nombre d'exemplaires d'une carte dans une main."""
+    card = find_card(name)
+    if card is None:
+        return 0
+    return hand.quantities.get(card, 0)
 
 
-def choose_trash(hand: list[CardName]) -> CardName:
-    """Choisit une carte à supprimer du deck."""
+def choose_discard(hand):
+    """
+    Choisit la carte la moins utile à conserver dans la main.
+    Retourne un membre de CardName.
+    """
+    # Ordre initial : cartes généralement les moins utiles
 
-    if CardName.ESTATE in hand:
-        return CardName.ESTATE
+    discard_priority = [
+        "curse",
+        "estate",
+        "copper",
+        "woodcutter",
+        "smithy",
+        "councilroom",
+        "distantshore",
+        "hireling",
+        "witch",
+        "farmingvillage",
+        "village",
+        "festival",
+        "market",
+        "laboratory",
+        "silver",
+        "gold",
+        "province",
+    ]
 
-    if CardName.COPPER in hand:
-        return CardName.COPPER
+    for name in discard_priority:
+        card = find_card(name)
+        if card is not None and card_quantity(hand, name) > 0:
+            return card
 
-    return hand[0]
+    # Repli : première carte présente dans la main
+    for card, quantity in hand.quantities.items():
+        if quantity > 0:
+            return card
+
+    # Une main vide ne devrait pas arriver sur cette route.
+    raise ValueError("Impossible de défausser : la main est vide.")
+
+
+def choose_trash(hand):
+    """
+    Choisit la carte à retirer définitivement du deck.
+    Retourne un membre de CardName.
+    """
+    trash_priority = [
+        "curse",
+        "estate",
+        "copper",
+        "woodcutter",
+    ]
+    for name in trash_priority:
+        card = find_card(name)
+        if card is not None and card_quantity(hand, name) > 0:
+            return card
+
+    # Si aucune carte faible n'est présente, éviter de détruire
+    # une carte forte : sélectionner la moins utile restante.
+    return choose_discard(hand)
 
 
 def calculate_buys() -> int:
