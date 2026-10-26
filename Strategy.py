@@ -96,7 +96,7 @@ def choose_buy(money: int, stock, deck=None) -> str:
 
     # 2. Quand les Provinces commencent à manquer,
     # les Duchés deviennent une priorité
-    if provinces_left <= 4 or duchies_left <= 4 and money >= 5 and available("duchy"):
+    if duchies_left <= 4 and money >= 5 and available("duchy"):
         return buy("duchy")
 
     # 3. Renforcer rapidement l'économie
