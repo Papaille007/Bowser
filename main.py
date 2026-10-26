@@ -142,7 +142,7 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
     # Notre royaume est identifié par le game_id.
     print("GAME :", game)
     # Le premier joueur correspond à notre royaume.
-    player = next(player for player in game.players if "Koopa Dominion" in player.name)
+    player = next(player for player in game.players if "MARIO TEST" in player.name)
     print("PLAYER :", player, flush=True)
     print("HAND :", player.hand, flush=True)
 
