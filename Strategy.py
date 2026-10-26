@@ -112,6 +112,34 @@ def calculate_actions() -> int:
     return 1
 
 
+def get_action_bonuses(action: str) -> tuple[int, int]:
+    """
+    Renvoie les bonus de la carte jouée :
+    (actions supplémentaires, achats supplémentaires).
+    """
+
+    bonuses = {
+        "festival": (2, 1),
+        "laboratory": (1, 0),
+        "market": (1, 1),
+        "village": (2, 0),
+        "woodcutter": (0, 1),
+        "councilroom": (0, 1),
+        "farmingvillage": (2, 0),
+        "distantshore": (1, 0),
+        "smithy": (0, 0),
+        "witch": (0, 0),
+        "hireling": (0, 0),
+    }
+
+    if not action.startswith("ACTION "):
+        return 0, 0
+
+    card_name = action.split(" ", 1)[1].lower()
+
+    return bonuses.get(card_name, (0, 0))
+
+
 def choose_action(hand) -> str:
     """Choisit une carte Action à jouer."""
     if hand.quantities.get(CardName.SMITHY, 0) > 0:

@@ -23,6 +23,7 @@ from Strategy import (
     choose_action,
     calculate_buys,
     calculate_actions,
+    get_action_bonuses,
 )
 
 app = FastAPI()
@@ -164,9 +165,19 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
 
             if action.startswith("ACTION"):
                 actions_remaining_by_game[game_id] -= 1
+                # Récupération des bonus de la carte
+                bonus_actions, bonus_buys = get_action_bonuses(action)
 
-            print("ACTION :", action, flush=True)
+                # Mise à jour des compteurs
+                actions_remaining_by_game[game_id] += bonus_actions
+                buys_remaining_by_game[game_id] += bonus_buys
+
+            # Relecture des compteurs après modification
+            actions_remaining = actions_remaining_by_game[game_id]
+            buys_remaining = buys_remaining_by_game[game_id]
+
             print("ACTIONS RESTANTES :", actions_remaining, flush=True)
+            print("ACHATS RESTANTS :", buys_remaining, flush=True)
 
             return DopynionResponseStr(
                 game_id=game_id,
