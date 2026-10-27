@@ -79,7 +79,7 @@ def root() -> str:
 
 @app.get('/name')
 def name() -> str:
-    return 'KOOPA DOMINION'
+    return 'KOOPA DOMINION test'
 
 
 @app.get('/start_game')
