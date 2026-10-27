@@ -283,6 +283,7 @@ def get_action_bonuses(action: str) -> tuple[int, int, int]:
         "militia": (0, 0, 2),
         "bureaucrat": (0, 0, 0),
         "bandit": (0, 0, 0),
+        "gardens": (0, 0, 0),
         "chancellor": (0, 0, 2),
     }
 
