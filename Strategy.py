@@ -98,6 +98,15 @@ def choose_buy(money: int, stock, deck=None) -> str:
     if duchies_left <= 4 and money >= 5 and available("duchy"):
         return buy("duchy")
 
+    # Hireling : priorité élevée en début de partie
+    if (
+        money >= 6
+        and available("hireling")
+        and owned("hireling") < 3
+        and provinces_left > 4
+    ):
+        return buy("hireling")
+
     deck_size = sum(deck.values())
 
     # Gardens devient intéressant quand le deck est volumineux
@@ -344,6 +353,10 @@ def choose_action(hand) -> str | None:
     if action is not None:
         return action
 
+    action = play("hireling")
+    if action is not None:
+        return action
+
     action = play("market")
     if action is not None:
         return action
@@ -388,10 +401,6 @@ def choose_action(hand) -> str | None:
     # À conserver seulement si ces cartes sont bien jouables
     # comme des actions dans la version de Dopynion utilisée.
     action = play("distantshore")
-    if action is not None:
-        return action
-
-    action = play("hireling")
     if action is not None:
         return action
 
