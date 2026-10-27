@@ -32,6 +32,7 @@ app = FastAPI()
 actions_remaining_by_game = {}
 buys_remaining_by_game = {}
 decks_by_game = {}
+money_bonus_by_game = {}
 
 #####################################################
 # Data model for responses
@@ -125,6 +126,7 @@ def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
     decks_by_game[game_id] = create_starting_deck()
     actions_remaining_by_game[game_id] = calculate_actions()
     buys_remaining_by_game[game_id] = calculate_buys()
+    money_bonus_by_game[game_id] = 0
 
     print("========== START TURN ==========", flush=True)
     print("GAME ID :", game_id, flush=True)
@@ -175,11 +177,11 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
             if action.startswith("ACTION"):
                 actions_remaining_by_game[game_id] -= 1
                 # Récupération des bonus de la carte
-                bonus_actions, bonus_buys = get_action_bonuses(action)
-
+                bonus_actions, bonus_buys, bonus_money = get_action_bonuses(action)
                 # Mise à jour des compteurs
                 actions_remaining_by_game[game_id] += bonus_actions
                 buys_remaining_by_game[game_id] += bonus_buys
+                money_bonus_by_game[game_id] += bonus_money
 
             # Relecture des compteurs après modification
             actions_remaining = actions_remaining_by_game[game_id]
@@ -197,7 +199,10 @@ def play(game: Game, game_id: GameIdDependency) -> DopynionResponseStr:
     # 2. PHASE ACHAT
     # -----------------------------------------
 
-    money = calculate_money(player.hand)
+    money = calculate_money(
+        player.hand,
+        money_bonus_by_game.get(game_id, 0),
+    )
 
     print("MONEY :", money, flush=True)
 

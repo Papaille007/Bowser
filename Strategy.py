@@ -54,16 +54,15 @@ def record_purchase(deck: dict, decision: str) -> None:
             return
 
 
-def calculate_money(hand) -> int:
-    """Calcule l'argent disponible dans la main."""
+def calculate_money(hand, bonus_money: int = 0) -> int:
+    """Calcule l'argent disponible : trésors en main + bonus d'actions."""
 
     money = 0
-
     money += hand.quantities.get(CardName.COPPER, 0) * 1
     money += hand.quantities.get(CardName.SILVER, 0) * 2
     money += hand.quantities.get(CardName.GOLD, 0) * 3
 
-    return money
+    return money + bonus_money
 
 
 def choose_buy(money: int, stock, deck=None) -> str:
@@ -103,6 +102,10 @@ def choose_buy(money: int, stock, deck=None) -> str:
     if money >= 6 and available("gold"):
         return buy("gold")
 
+    # Bandit : améliore l'économie et attaque les adversaires
+    if money >= 5 and available("bandit") and owned("bandit") < 2:
+        return buy("bandit")
+
     if money >= 3 and available("silver") and money < 5:
         return buy("silver")
 
@@ -115,6 +118,14 @@ def choose_buy(money: int, stock, deck=None) -> str:
 
     if money >= 5 and available("councilroom") and owned("councilroom") < 1:
         return buy("councilroom")
+
+    # Milice : +2 pièces et attaque les adversaires
+    if money >= 4 and available("militia") and owned("militia") < 2:
+        return buy("militia")
+
+    # Bureaucrate : gagne un Argent et gêne les adversaires
+    if money >= 4 and available("bureaucrat") and owned("bureaucrat") < 2:
+        return buy("bureaucrat")
 
     if money >= 4 and available("smithy") and owned("smithy") < 2:
         return buy("smithy")
@@ -241,32 +252,35 @@ def calculate_actions() -> int:
     return 1
 
 
-def get_action_bonuses(action: str) -> tuple[int, int]:
+def get_action_bonuses(action: str) -> tuple[int, int, int]:
     """
     Renvoie les bonus de la carte jouée :
-    (actions supplémentaires, achats supplémentaires).
+    (actions supplémentaires, achats supplémentaires, argent).
     """
 
     bonuses = {
-        "festival": (2, 1),
-        "laboratory": (1, 0),
-        "market": (1, 1),
-        "village": (2, 0),
-        "woodcutter": (0, 1),
-        "councilroom": (0, 1),
-        "farmingvillage": (2, 0),
-        "distantshore": (1, 0),
-        "smithy": (0, 0),
-        "witch": (0, 0),
-        "hireling": (0, 0),
+        "festival": (2, 1, 2),
+        "laboratory": (1, 0, 0),
+        "market": (1, 1, 1),
+        "village": (2, 0, 0),
+        "woodcutter": (0, 1, 2),
+        "councilroom": (0, 1, 0),
+        "farmingvillage": (2, 0, 0),
+        "distantshore": (1, 0, 0),
+        "smithy": (0, 0, 0),
+        "witch": (0, 0, 0),
+        "hireling": (0, 0, 0),
+        "militia": (0, 0, 2),
+        "bureaucrat": (0, 0, 0),
+        "bandit": (0, 0, 0),
     }
 
     if not action.startswith("ACTION "):
-        return 0, 0
+        return 0, 0, 0
 
     card_name = action.split(" ", 1)[1].lower()
 
-    return bonuses.get(card_name, (0, 0))
+    return bonuses.get(card_name, (0, 0, 0))
 
 
 def choose_action(hand) -> str | None:
@@ -291,6 +305,9 @@ def choose_action(hand) -> str | None:
         "councilroom",
         "distantshore",
         "hireling",
+        "militia",
+        "bureaucrat",
+        "bandit",
     )
 
     has_other_action = any(count(name) > 0 for name in terminal_actions)
@@ -321,6 +338,20 @@ def choose_action(hand) -> str | None:
 
     # 4. Attaque et pioche
     action = play("witch")
+    if action is not None:
+        return action
+    # Bandit : attaque et gain d'Or
+    action = play("bandit")
+    if action is not None:
+        return action
+
+    # Milice : attaque et +2 pièces
+    action = play("militia")
+    if action is not None:
+        return action
+
+    # Bureaucrate : gain d'Argent et gêne les adversaires
+    action = play("bureaucrat")
     if action is not None:
         return action
 
