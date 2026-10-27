@@ -349,11 +349,11 @@ def choose_action(hand) -> str | None:
             return action
 
     # 3. Pioche qui permet généralement de continuer à jouer
-    action = play("laboratory")
+    action = play("hireling")
     if action is not None:
         return action
 
-    action = play("hireling")
+    action = play("laboratory")
     if action is not None:
         return action
 
