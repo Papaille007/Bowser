@@ -41,17 +41,11 @@ def create_starting_deck() -> dict:
 
 
 def record_purchase(deck: dict, decision: str) -> None:
-    """Ajoute au deck la carte correspondant à un achat."""
 
-    if not decision.startswith("BUY "):
-        return
-
-    card_name = decision.split(" ", 1)[1]
-
-    for card in CardName:
-        if card.value == card_name:
+    if decision.startswith('BUY '):
+        card = find_card(decision.split(' ', 1)[1])
+        if card is not None:
             deck[card] = deck.get(card, 0) + 1
-            return
 
 
 def calculate_money(hand, bonus_money: int = 0) -> int:
@@ -65,111 +59,78 @@ def calculate_money(hand, bonus_money: int = 0) -> int:
     return money + bonus_money
 
 
+# Base prices for supported kingdom cards. Dynamic price effects are not represented.
+CARD_COSTS = {
+    'copper': 0, 'silver': 3, 'gold': 6,
+    'estate': 2, 'duchy': 5, 'province': 8,
+    'village': 3, 'smithy': 4, 'festival': 5,
+    'laboratory': 5, 'market': 5, 'woodcutter': 3,
+    'bandit': 5, 'witch': 5, 'councilroom': 5,
+    'militia': 4, 'bureaucrat': 4, 'farmingvillage': 4,
+}
+
+
+def purchase_cost(decision: str):
+    if not decision.startswith('BUY '):
+        return None
+    card = find_card(decision.split(' ', 1)[1])
+    return CARD_COSTS.get(str(card.value).lower()) if card is not None else None
+
+
+
 def choose_buy(money: int, stock, deck=None) -> str:
-    """Stratégie d'achat : économie, puis moteur, puis points."""
+    deck = deck if deck is not None else {}
 
-    if deck is None:
-        deck = {}
-
-    def available(name: str) -> bool:
+    def available(name):
         return card_count(stock, name) > 0
 
-    def owned(name: str) -> int:
+    def owned(name):
+        return card_count(deck, name)
+
+    def buy(name):
         card = find_card(name)
-        if card is None:
-            return 0
-        return deck.get(card, 0)
+        return f'BUY {card.value}' if card is not None else 'END_TURN'
 
-    def buy(name: str) -> str:
-        card = find_card(name)
-        if card is None:
-            return "END_TURN"
-        return f"BUY {card.value}"
+    provinces_left = card_count(stock, 'province')
+    if money >= 8 and available('province'):
+        return buy('province')
+    if provinces_left <= 3 and money >= 5 and available('duchy'):
+        return buy('duchy')
+    if money >= 6 and available('gold'):
+        return buy('gold')
+    if money >= 5 and available('bandit') and owned('bandit') < 2:
+        return buy('bandit')
+    if 3 <= money < 5 and available('silver'):
+        return buy('silver')
+    if money >= 5 and available('witch') and owned('witch') < 2:
+        return buy('witch')
+    if money >= 5 and available('laboratory') and owned('laboratory') < 2:
+        return buy('laboratory')
+    if money >= 5 and available('councilroom') and owned('councilroom') < 1:
+        return buy('councilroom')
+    if money >= 4 and available('militia') and owned('militia') < 2:
+        return buy('militia')
+    if money >= 4 and available('bureaucrat') and owned('bureaucrat') < 2:
+        return buy('bureaucrat')
+    if money >= 4 and available('smithy') and owned('smithy') < 2:
+        return buy('smithy')
+    terminal_actions = sum(owned(name) for name in ('smithy', 'councilroom', 'witch', 'militia', 'bureaucrat', 'bandit', 'woodcutter'))
+    if money >= 3 and available('village') and owned('village') < 2 and terminal_actions > owned('village'):
+        return buy('village')
+    if money >= 5 and available('festival') and owned('festival') < 2:
+        return buy('festival')
+    if money >= 5 and available('market') and owned('market') < 2:
+        return buy('market')
+    if money >= 4 and available('farmingvillage') and owned('farmingvillage') < 2:
+        return buy('farmingvillage')
+    if money >= 3 and available('woodcutter') and owned('woodcutter') < 1:
+        return buy('woodcutter')
+    if money >= 3 and available('silver'):
+        return buy('silver')
+    if provinces_left <= 2 and money >= 2 and available('estate'):
+        return buy('estate')
+    return 'END_TURN'
 
-    provinces_left = card_count(stock, "province")
-    duchies_left = card_count(stock, "duchy")
-
-    # 1. Les points avant tout dès que possible
-    if money >= 8 and available("province"):
-        return buy("province")
-
-    # 2. Quand les Provinces commencent à manquer,
-    # les Duchés deviennent une priorité
-    if duchies_left <= 4 and money >= 5 and available("duchy"):
-        return buy("duchy")
-
-    # 3. Renforcer rapidement l'économie
-    if money >= 6 and available("gold"):
-        return buy("gold")
-
-    # Bandit : améliore l'économie et attaque les adversaires
-    if money >= 5 and available("bandit") and owned("bandit") < 2:
-        return buy("bandit")
-
-    if money >= 3 and available("silver") and money < 5:
-        return buy("silver")
-
-    # 4. Cartes d'action fortes : éviter d'en acheter trop
-    if money >= 5 and available("witch") and owned("witch") < 2:
-        return buy("witch")
-
-    if money >= 5 and available("laboratory") and owned("laboratory") < 2:
-        return buy("laboratory")
-
-    if money >= 5 and available("councilroom") and owned("councilroom") < 1:
-        return buy("councilroom")
-
-    # Milice : +2 pièces et attaque les adversaires
-    if money >= 4 and available("militia") and owned("militia") < 2:
-        return buy("militia")
-
-    # Bureaucrate : gagne un Argent et gêne les adversaires
-    if money >= 4 and available("bureaucrat") and owned("bureaucrat") < 2:
-        return buy("bureaucrat")
-
-    if money >= 4 and available("smithy") and owned("smithy") < 2:
-        return buy("smithy")
-
-    # 5. Village seulement si le deck possède déjà
-    # assez de cartes d'action à jouer
-    terminal_actions = (
-        owned("smithy") + owned("laboratory") + owned("councilroom") + owned("witch")
-    )
-
-    if (
-        money >= 3
-        and available("village")
-        and owned("village") < 2
-        and terminal_actions > owned("village")
-    ):
-        return buy("village")
-
-    if money >= 5 and available("festival") and owned("festival") < 2:
-        return buy("festival")
-
-    if money >= 5 and available("market") and owned("market") < 2:
-        return buy("market")
-
-    if money >= 4 and available("farmingvillage") and owned("farmingvillage") < 2:
-        return buy("farmingvillage")
-
-    if money >= 3 and available("woodcutter") and owned("woodcutter") < 1:
-        return buy("woodcutter")
-
-    # 6. Repli économique
-    if money >= 3 and available("silver"):
-        return buy("silver")
-
-    # Duché de secours si la fin de partie est proche
-    if provinces_left <= 2 and money >= 5 and available("duchy"):
-        return buy("duchy")
-
-    # Estate uniquement en toute fin de partie
-    if provinces_left <= 2 and money >= 2 and available("estate"):
-        return buy("estate")
-
-    # Surtout pas de Cuivre acheté automatiquement
-    return "END_TURN"
 
 
 def card_quantity(hand, name: str) -> int:
@@ -180,45 +141,18 @@ def card_quantity(hand, name: str) -> int:
     return hand.quantities.get(card, 0)
 
 
+
 def choose_discard(hand):
-    """
-    Choisit la carte la moins utile à conserver dans la main.
-    Retourne un membre de CardName.
-    """
-    # Ordre initial : cartes généralement les moins utiles
-
-    discard_priority = [
-        "curse",
-        "estate",
-        "copper",
-        "woodcutter",
-        "smithy",
-        "councilroom",
-        "distantshore",
-        "hireling",
-        "witch",
-        "farmingvillage",
-        "village",
-        "festival",
-        "market",
-        "laboratory",
-        "silver",
-        "gold",
-        "province",
-    ]
-
-    for name in discard_priority:
+    for name in ('curse', 'estate', 'copper', 'woodcutter', 'smithy', 'councilroom', 
+                 'distantshore', 'hireling', 'witch', 'farmingvillage', 'village', 
+                 'festival', 'market', 'laboratory', 'silver', 'gold', 'province'):
         card = find_card(name)
-        if card is not None and card_quantity(hand, name) > 0:
+        if card is not None and card in hand:
             return card
+    if not hand:
+        raise ValueError('No card available to discard')
+    return hand[0]
 
-    # Repli : première carte présente dans la main
-    for card, quantity in hand.quantities.items():
-        if quantity > 0:
-            return card
-
-    # Une main vide ne devrait pas arriver sur cette route.
-    raise ValueError("Impossible de défausser : la main est vide.")
 
 
 def choose_trash(hand):
@@ -252,131 +186,43 @@ def calculate_actions() -> int:
     return 1
 
 
+# (extra actions, extra buys, extra money). Other card effects are resolved by referee.
+ACTION_BONUSES = {
+    'festival': (2, 1, 2), 'laboratory': (1, 0, 0),
+    'market': (1, 1, 1), 'village': (2, 0, 0),
+    'woodcutter': (0, 1, 2), 'councilroom': (0, 1, 0),
+    'farmingvillage': (2, 0, 0), 'distantshore': (1, 0, 0),
+    'smithy': (0, 0, 0), 'witch': (0, 0, 0),
+    'hireling': (0, 0, 0), 'militia': (0, 0, 2),
+    'bureaucrat': (0, 0, 0), 'bandit': (0, 0, 0),
+}
+
+
 def get_action_bonuses(action: str) -> tuple[int, int, int]:
-    """
-    Renvoie les bonus de la carte jouée :
-    (actions supplémentaires, achats supplémentaires, argent).
-    """
+    if not action.startswith('ACTION '):
+        return (0, 0, 0)
+    return ACTION_BONUSES.get(action.split(' ', 1)[1].lower(), (0, 0, 0))
 
-    bonuses = {
-        "festival": (2, 1, 2),
-        "laboratory": (1, 0, 0),
-        "market": (1, 1, 1),
-        "village": (2, 0, 0),
-        "woodcutter": (0, 1, 2),
-        "councilroom": (0, 1, 0),
-        "farmingvillage": (2, 0, 0),
-        "distantshore": (1, 0, 0),
-        "smithy": (0, 0, 0),
-        "witch": (0, 0, 0),
-        "hireling": (0, 0, 0),
-        "militia": (0, 0, 2),
-        "bureaucrat": (0, 0, 0),
-        "bandit": (0, 0, 0),
-    }
 
-    if not action.startswith("ACTION "):
-        return 0, 0, 0
-
-    card_name = action.split(" ", 1)[1].lower()
-
-    return bonuses.get(card_name, (0, 0, 0))
 
 
 def choose_action(hand) -> str | None:
-    """Choisit l'action à jouer selon les cartes en main."""
+    def count(name):
+        return card_count(hand, name)
 
-    def count(name: str) -> int:
+    def play(name):
         card = find_card(name)
-        if card is None:
-            return 0
-        return hand.quantities.get(card, 0)
+        return f'ACTION {card.value}' if card is not None and count(name) > 0 else None
 
-    def play(name: str) -> str | None:
-        card = find_card(name)
-        if card is not None and count(name) > 0:
-            return f"ACTION {card.value}"
-        return None
-
-    # Cartes qui consomment une action sans en rendre
-    terminal_actions = (
-        "witch",
-        "smithy",
-        "councilroom",
-        "distantshore",
-        "hireling",
-        "militia",
-        "bureaucrat",
-        "bandit",
-    )
-
-    has_other_action = any(count(name) > 0 for name in terminal_actions)
-
-    # 1. Festival : bonus d'actions, d'achat et d'argent
-    action = play("festival")
-    if action is not None:
-        return action
-
-    # 2. Débloquer les autres cartes Action
-    if has_other_action:
-        action = play("village")
-        if action is not None:
-            return action
-
-        action = play("farmingvillage")
-        if action is not None:
-            return action
-
-    # 3. Pioche qui permet généralement de continuer à jouer
-    action = play("laboratory")
-    if action is not None:
-        return action
-
-    action = play("market")
-    if action is not None:
-        return action
-
-    # 4. Attaque et pioche
-    action = play("witch")
-    if action is not None:
-        return action
-    # Bandit : attaque et gain d'Or
-    action = play("bandit")
-    if action is not None:
-        return action
-
-    # Milice : attaque et +2 pièces
-    action = play("militia")
-    if action is not None:
-        return action
-
-    # Bureaucrate : gain d'Argent et gêne les adversaires
-    action = play("bureaucrat")
-    if action is not None:
-        return action
-
-    # 5. Pioche de cartes
-    action = play("councilroom")
-    if action is not None:
-        return action
-
-    action = play("smithy")
-    if action is not None:
-        return action
-
-    # 6. Autres cartes utiles
-    action = play("woodcutter")
-    if action is not None:
-        return action
-
-    # À conserver seulement si ces cartes sont bien jouables
-    # comme des actions dans la version de Dopynion utilisée.
-    action = play("distantshore")
-    if action is not None:
-        return action
-
-    action = play("hireling")
-    if action is not None:
-        return action
-
+    terminals = ('witch', 'smithy', 'councilroom', 'militia', 'bureaucrat', 'bandit', 'woodcutter')
+    for name in ('laboratory', 'market'):
+        if result := play(name):
+            return result
+    if any(count(name) > 0 for name in terminals):
+        for name in ('village', 'farmingvillage', 'festival'):
+            if result := play(name):
+                return result
+    for name in ('witch', 'bandit', 'militia', 'bureaucrat', 'councilroom', 'smithy', 'woodcutter', 'festival', 'village', 'farmingvillage', 'distantshore', 'hireling'):
+        if result := play(name):
+            return result
     return None
