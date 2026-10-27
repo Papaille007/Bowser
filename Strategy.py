@@ -98,9 +98,19 @@ def choose_buy(money: int, stock, deck=None) -> str:
     if duchies_left <= 4 and money >= 5 and available("duchy"):
         return buy("duchy")
 
+    deck_size = sum(deck.values())
+
+    # Gardens devient intéressant quand le deck est volumineux
+    if money >= 4 and available("gardens") and deck_size >= 30 and owned("gardens") < 2:
+        return buy("gardens")
+
     # 3. Renforcer rapidement l'économie
     if money >= 6 and available("gold"):
         return buy("gold")
+
+    # Chancelier : coûte 3 pièces
+    if money >= 3 and available("chancellor") and owned("chancellor") < 2:
+        return buy("chancellor")
 
     # Bandit : améliore l'économie et attaque les adversaires
     if money >= 5 and available("bandit") and owned("bandit") < 2:
@@ -273,6 +283,7 @@ def get_action_bonuses(action: str) -> tuple[int, int, int]:
         "militia": (0, 0, 2),
         "bureaucrat": (0, 0, 0),
         "bandit": (0, 0, 0),
+        "chancellor": (0, 0, 2),
     }
 
     if not action.startswith("ACTION "):
@@ -361,6 +372,10 @@ def choose_action(hand) -> str | None:
         return action
 
     action = play("smithy")
+    if action is not None:
+        return action
+
+    action = play("chancellor")
     if action is not None:
         return action
 

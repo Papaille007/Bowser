@@ -123,7 +123,9 @@ def start_game(game_id: GameIdDependency) -> DopynionResponseStr:
 @app.get("/start_turn")
 def start_turn(game_id: GameIdDependency) -> DopynionResponseStr:
 
-    decks_by_game[game_id] = create_starting_deck()
+    if game_id not in decks_by_game:
+        decks_by_game[game_id] = create_starting_deck()
+
     actions_remaining_by_game[game_id] = calculate_actions()
     buys_remaining_by_game[game_id] = calculate_buys()
     money_bonus_by_game[game_id] = 0
